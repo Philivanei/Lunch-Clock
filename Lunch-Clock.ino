@@ -1,7 +1,6 @@
 #include "RTClib.h"
 
 // Relais PINS
-//STROM AUS FEATURE MUSS IMPLEMENTIERT WERDEN!!!
 #define RELAISPOWER 7
 #define RELAISB 5
 #define RELAISC 6
@@ -9,29 +8,22 @@
 #define BROTZEITBUTTON 4
 
 RTC_DS3231 rtc;
-//One dimension to store the day count and another one to store the name of the specific day
+// One dimension to store the day count and another one to store the name of the specific day
 char daysOfTheWeek[7][12] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
 
 bool powerTurn = false;
+bool evenNumber = true;
 byte lastMinute;
 byte brotzeitTime = 1;
 int brotzeitTimeCount = 1;
 
 
 void setup () {
-
   Serial.begin(9600);
   initializeRTC();
-  pinMode(RELAISPOWER,OUTPUT);
-  pinMode(RELAISB,OUTPUT);
-  pinMode(RELAISC,OUTPUT);
-  digitalWrite(RELAISPOWER,LOW);
-  digitalWrite(RELAISB,HIGH);
-  digitalWrite(RELAISC,HIGH);
+  initializePins();
   
-  pinMode(BROTZEITBUTTON,INPUT);
   lastMinute = getMinute();
-  
 }
 
 void loop () {
@@ -73,16 +65,25 @@ void loop () {
     
     case 3:
     //Serial.println(brotzeitTimeCount);
-    if(lastMinute != getMinute()){
+    if((brotzeitTimeCount % 2) == 0 && evenNumber){
+      if(lastMinute != getMinute()){
+        lastMinute = getMinute();
+        evenNumber = false;
+        brotzeitTimeCount = brotzeitTimeCount - 1;
+        moveClockHands();
+      }
+    } else if(lastMinute != getMinute()){
       lastMinute = getMinute();
       moveClockHands();
       delay(200);
       moveClockHands();
-      brotzeitTimeCount = brotzeitTimeCount - 1;
+      brotzeitTimeCount = brotzeitTimeCount - 2;
     }
-    if(brotzeitTimeCount < 1){
-    brotzeitTimeCount = 1;
-    brotzeitTime = 1;
+    
+    if(brotzeitTimeCount <= 1){
+      brotzeitTimeCount = 1;
+      brotzeitTime = 1;
+      evenNumber = true;
     }
     break;
     
@@ -127,6 +128,17 @@ byte getMinute(){
 }
 byte getSecond(){
   return rtc.now().second();
+}
+
+
+void initializePins(){
+  pinMode(RELAISPOWER,OUTPUT);
+  pinMode(RELAISB,OUTPUT);
+  pinMode(RELAISC,OUTPUT);
+  pinMode(BROTZEITBUTTON,INPUT);
+  digitalWrite(RELAISPOWER,LOW);
+  digitalWrite(RELAISB,HIGH);
+  digitalWrite(RELAISC,HIGH);
 }
 
 
