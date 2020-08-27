@@ -1,9 +1,9 @@
 #include "RTClib.h"
 
 // Relais PINS
-#define RELAISPOWER 7
-#define RELAISB 5
-#define RELAISC 6
+#define RELAISPOWER 5
+#define RELAISB 6
+#define RELAISC 7
 // Button PINS
 #define BROTZEITBUTTON 4
 
@@ -34,12 +34,14 @@ void loop () {
   Serial.print(":");
   Serial.print(getSecond());
   Serial.println("\n");
-  if(digitalRead(BROTZEITBUTTON) == HIGH){
-    delay(2000);
-    brotzeitTime = brotzeitTime + 1;
-  }
   
-  switch(brotzeitTime){
+  checkButton();
+  clockLogic();
+}
+
+
+void clockLogic(){
+    switch(brotzeitTime){
     
     case 1:
     //Serial.println(brotzeitTimeCount);
@@ -117,6 +119,14 @@ void moveClockHands(){
       lastMinute = getMinute();
       powerTurn = true;
     }
+}
+
+
+void checkButton(){
+  if(digitalRead(BROTZEITBUTTON) == HIGH){
+    delay(2000);
+    brotzeitTime = brotzeitTime + 1;
+  }
 }
 
 
