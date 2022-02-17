@@ -16,13 +16,13 @@ def setup_gpios():
     GPIO.setup(relais_two, GPIO.OUT)
 
 
-def write_time_to_json():
+def write_time_to_json(hour, minute):
     json_data = open("LastTimeState.json", "r")
     json_object = json.load(json_data)
     json_data.close()
 
-    json_object["hour"] = converted_hour_now()
-    json_object["minute"] = datetime.datetime.now().time().minute
+    json_object["hour"] = hour
+    json_object["minute"] = minute
 
     json_data = open("LastTimeState.json", "w")
     json.dump(json_object, json_data)
@@ -30,6 +30,8 @@ def write_time_to_json():
 
 
 def clock_hand_step(minute, init):
+    power_delay = 4
+    switch_delay = 0.2
     if init:
         polarisation = (minute % 2) == 0
     else:
@@ -38,16 +40,16 @@ def clock_hand_step(minute, init):
     if polarisation:
         GPIO.output(relais_one, GPIO.LOW)
         GPIO.output(relais_two, GPIO.LOW)
-        time.sleep(0.2)
+        time.sleep(switch_delay)
         GPIO.output(power_relais, GPIO.HIGH)
-        time.sleep(3)
+        time.sleep(power_delay)
         GPIO.output(power_relais, GPIO.LOW)
     else:
         GPIO.output(relais_one, GPIO.HIGH)
         GPIO.output(relais_two, GPIO.HIGH)
-        time.sleep(0.2)
+        time.sleep(switch_delay)
         GPIO.output(power_relais, GPIO.HIGH)
-        time.sleep(3)
+        time.sleep(power_delay)
         GPIO.output(power_relais, GPIO.LOW)
 
 
@@ -80,6 +82,7 @@ def initialize_clock_hands():
                 last_known_hour = 1
             clock_hand_step(last_known_minute, True)
             last_known_minute += 1
+            write_time_to_json(last_known_hour, last_known_minute)
 
 
 def main():
@@ -87,7 +90,7 @@ def main():
     while (True):
         if last_minute != datetime.datetime.now().time().minute:
             last_minute = datetime.datetime.now().time().minute
-            write_time_to_json()
+            write_time_to_json(converted_hour_now(), datetime.datetime.now().time().minute)
             clock_hand_step(datetime.datetime.now().time().minute, False)
 
 
